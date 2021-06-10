@@ -252,12 +252,13 @@ func getCurrentRecord(domain string, name string, recordType string, clientID st
 func main() {
 
 	var domain = flag.String("domain", "", "The Godaddy domain to use")
-	var name = flag.String("name", "", "The name of the record, aka the hostname")
+	// var name = flag.String("name", "", "The name of the record, aka the hostname")
 	var recordType = flag.String("type", "A", "The DNS record type to use")
 	var clientID = flag.String("clientid", "", "Godaddy client ID")
 	var clientKey = flag.String("clientKey", "", "Godaddy client key")
 	flag.Parse()
-	if *domain == "" || *name == "" || *clientID == "" || *clientKey == "" {
+	names := flag.Args()
+	if *domain == "" || *clientID == "" || *clientKey == "" {
 		log.Fatal("Please supply all the necessary arguments")
 	}
 	publicIP, err := getPublicIP()
@@ -267,25 +268,27 @@ func main() {
 	log.WithFields(log.Fields{
 		"IP": publicIP,
 	}).Info("Found public IP")
-	currentIP, err := getCurrentRecord(*domain, *name, *recordType, *clientID, *clientKey)
-	if err != nil {
-		log.Fatal("Failed to get current record")
-	}
-	if currentIP == "" {
-		log.Info("The record currently does not exist, will be created")
-		err = addDNSRecord(*domain, *name, *recordType, *clientID, *clientKey, publicIP)
+	for _, name := range names {
+		currentIP, err := getCurrentRecord(*domain, name, *recordType, *clientID, *clientKey)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("Failed to get current record")
 		}
-	} else {
-		if currentIP == publicIP {
-			log.Info("The record is already up-to-date with current public IP")
-			return
-		} else {
-			log.Info("The DNS record exists, but needs to be updated with current IP")
-			err = updateDNSRecord(*domain, *name, *recordType, *clientID, *clientKey, publicIP)
+		if currentIP == "" {
+			log.Info("The record currently does not exist, will be created")
+			err = addDNSRecord(*domain, name, *recordType, *clientID, *clientKey, publicIP)
 			if err != nil {
 				log.Fatal(err)
+			}
+		} else {
+			if currentIP == publicIP {
+				log.Info("The record is already up-to-date with current public IP")
+				continue
+			} else {
+				log.Info("The DNS record exists, but needs to be updated with current IP")
+				err = updateDNSRecord(*domain, name, *recordType, *clientID, *clientKey, publicIP)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}
