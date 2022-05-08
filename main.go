@@ -28,7 +28,9 @@ func processDomain(d config.DomainConfiguration, handler godaddy.GodaddyHandler,
 				record.Value = "@"
 			}
 		} else {
-			record.Value = externalIP
+			if record.Value == "" {
+				record.Value = externalIP
+			}
 		}
 		if dnsRecord.Value == "" {
 			log.WithFields(log.Fields{
