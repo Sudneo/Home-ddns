@@ -17,12 +17,12 @@ domains:
             type:  "A"
           - name:  "test"
             type:  "CNAME"
-	  - name:  "anotherCNAME"
-	    type:  "CNAME"
-	    ttl:   "1200"
-	  - name:  "proxy"
-	    type:  "A"
-	    value: "260.1.1.1"
+          - name:  "anotherCNAME"
+            type:  "CNAME"
+            ttl:   "1200"
+          - name:  "proxy"
+            type:  "A"
+            value: "260.1.1.1"
 ```
 
 The usage therefore now is much simpler:
@@ -33,7 +33,7 @@ Usage of ./godaddy-dns:
           Configuration file to use (default "config.yaml")
   -v    Enable debug logs
 ```
-	    
+        
 ## Use Case
 
 The main use case is to update a given DNS record for a domain in Godaddy with the public IP address of the machine where this script is run from.
