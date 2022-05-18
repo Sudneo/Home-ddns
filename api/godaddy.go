@@ -58,6 +58,16 @@ type godaddyRecordData []struct {
 	Weight   int    `json:"weight"`
 }
 
+func (h *GodaddyHandler) SetAPIKey(key string) error {
+	h.ClientKey = key
+	return nil
+}
+
+func (h *GodaddyHandler) SetAPIID(id string) error {
+	h.ClientID = id
+	return nil
+}
+
 // GetRecord implements Provider.GetRecord. Fetches from Godaddy API the information about an existing record
 func (h *GodaddyHandler) GetRecord(domain string, record models.DNSRecord) (dnsRecord models.DNSRecord, err error) {
 	var d models.DNSRecord

@@ -1,18 +1,21 @@
 # GOdaddy-ddns
-Simple Golang script to update DNS records in godaddy for home public IP 
+
+Simple Golang tool to update DNS records in godaddy (extensible to other providers) for home public IP 
 
 ## Usage 
 
-All the configuration is now moved to a YAML file, this allows to manage multiple domains at once, with more flexibility in record types,TTLs, etc.
+All the configuration is now moved to a YAML file, this allows to manage multiple domains at once, with more flexibility in record types, TTLs, etc.
 
 An example configuration is as follows:
 
 ```yaml
-client_id: "MYID" 
-client_key: "MYKEY"
-domains:
-    - domain: "mydomain.com"
-      records:
+providers:
+  - name: "Godaddy" # The only implemented ATM
+    client_id: "MYID" 
+    client_key: "MYKEY"
+    domains:
+      - domain: "mydomain.com"
+        records:
           - name:  "home"
             type:  "A"
           - name:  "test"
@@ -48,6 +51,55 @@ The script uses `http://ifconfig.io` to query the public IP. This means that the
 * If the record exists but doesn't match the current public IP, that record is updated.
 * If the record does not exist, it is created.
 
-## Roadmap
+## Development
 
-I am planning and laid the foundation to allow different providers to be 'plugged in'. This means that it will be enough for someone to write the API interactions with their own provider, and the rest of the logic will be shared with the rest of the code.
+The most common use case for development is adding a new provider to support.
+To do this, it's enough to implement the `models.Provider` interface and then register the new provider in the global map in `main.go` to map a string of choice to the corresponding type.
+
+Currently, the only implemented provider is Godaddy:
+
+```go
+const (
+	godaddyProvider = "Godaddy"
+	// New provider here
+	myProvider = "MyProvider"
+)
+```
+
+and 
+
+```go
+
+
+package api
+
+[...]
+
+type MyProviderHandler struct {
+	ClientID  string
+	ClientKey string
+	MyKey string
+}
+func (h *MyProviderHandler) SetAPIKey(key string) error {}
+func (h *MyProviderHandler) SetAPIID(key string) error {}
+func (h *MyProviderHandler) GetRecord(domain string, record models.DNSRecord) (dnsRecord models.DNSRecord, err error) {}
+func (h *MyProviderHandler) SetRecord(domain string, record models.DNSRecord) (err error) {}
+func (h *MyProviderHandler) UpdateRecord(domain string, record models.DNSRecord) (err error) {}
+```
+
+Finally, the new provider can be used directly in the configuration:
+
+```yaml
+[...]
+  - name: "MyProvider"
+    client_id: "MYID" 
+    client_key: "MYKEY"
+    domains:
+    [...]
+```
+
+It's important to consider a few things:
+
+* For CNAME records, the value expected is the A record pointer, such as `@`, rather than the IP, this is used for drift detection. At worst, the tool will set the value everytime, even if it's already correct, if this is not implemented correctly.
+* When a DNS record does NOT exist, GetRecord should return `""` as the record value.
+

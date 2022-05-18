@@ -17,6 +17,11 @@ func (i *InvalidConfiguration) Error() string {
 }
 
 type Config struct {
+	Providers []ProviderConfiguration `yaml:"providers"`
+}
+
+type ProviderConfiguration struct {
+	Name      string                `yaml:"name"`
 	Domains   []DomainConfiguration `yaml:"domains"`
 	ClientID  string                `yaml:"client_id"`
 	ClientKey string                `yaml:"client_key"`
@@ -43,12 +48,18 @@ func parseConfig(yamlData []byte) (Config, error) {
 	if err != nil {
 		return config, &InvalidConfiguration{Description: "Invalid YAML in configuration"}
 	}
-	if len(config.Domains) == 0 {
-		return config, &InvalidConfiguration{Description: "No domain configuration"}
+	if len(config.Providers) == 0 {
+		return config, &InvalidConfiguration{Description: "No provider configuration supplied"}
 	}
-	if config.ClientID == "" || config.ClientKey == "" {
-		return config, &InvalidConfiguration{Description: "No API credentials supplied"}
+	totalDomains := 0
+	for _, provider := range config.Providers {
+		totalDomains += len(provider.Domains)
+		if provider.ClientID == "" || provider.ClientKey == "" {
+			return config, &InvalidConfiguration{Description: "Provider configured but no API credentials supplied"}
+		}
+	}
+	if totalDomains == 0 {
+		return config, &InvalidConfiguration{Description: "No domain configuration supplied"}
 	}
 	return config, nil
-
 }
