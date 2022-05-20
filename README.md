@@ -1,6 +1,6 @@
 # Home-ddns
 
-Simple Golang tool to update DNS records (extensible to multiple providers) for home public IP 
+Simple Golang tool to update DNS records (extensible to multiple providers) for home public IP. Emulate Dynamic DNS for free.
 
 ## Installation
 
@@ -8,15 +8,39 @@ The tool can be easily compiled locally:
 
 ```bash
 git clone https://github.com/Sudneo/Home-ddns.git
-cd home-ddns
+cd Home-ddns
 make build
+./home-ddns -h
 ```
 
 Alternatively, a prebuild release can be downloaded from [Github](https://github.com/Sudneo/Home-ddns/releases).
 
+### Docker
+
+A Dockerfile is provided to build the tool using Docker:
+
+```bash
+cd Home-ddns
+docker build -t home-ddns .
+docker run -v ${PWD}/config.yaml:/home-ddns/config.yaml -it home-ddns [-v -j -cron -interval 1]
+```
+
+Alternative it's possible to use the Makefile:
+
+```bash
+make docker-build
+make docker-run
+```
+
+The image is built using a `scratch` container, so it's very minimal and does not even have a shell (hence, you won't be able to `exec` inside it).
+
+```
+home-ddns      latest          2a04c146665c   About a minute ago   5.48MB
+```
+
 ## Usage 
 
-All the configuration is in a YAML file, this allows to manage multiple domains at once, with more flexibility in record types, TTLs, etc.
+All the configuration is in a YAML file, this allows to manage multiple providers/domains/records at once, with full flexibility in each domain type, TTL, etc.
 
 An example configuration is as follows:
 
@@ -40,30 +64,37 @@ providers:
             value: "260.1.1.1"
 ```
 
-The usage therefore now is much simpler:
+The usage therefore now is simple:
 
 ```
 Usage of ./home-ddns:
   -config string
         Configuration file to use (default "config.yaml")
+  -cron
+        Enable cron mode (execute every interval)
+  -interval int
+        Interval in minutes between each execution (requires cron mode) (default 60)
   -j    Enable logging in JSON
   -v    Enable debug logs
 ```
+
+The `cron` mode simply will have the execution run in an infinite loop. At every loop the configuration is re-read, so it can be modified dynamically (for example as a ConfigMap in Kubernetes).
         
 ## Use Case
 
-The main use case is to update a given DNS record for a domain in a DNS provider with the public IP address of the machine where this script is run from.
-This is the case for example for non-static domestic IPs, where we want to achieve Dynamic-DNS to have our home IPs publicly reacheable with a DNS name.
-However, the tool supports specifying a value for a domain, if this is different from the public IP, and can be used to set whetever record type the provider supports.
+The main use case is to update a given DNS record (or a set of record) for a domain in a DNS provider with the public IP address of the machine where this script is run from.
+This is the case for example for non-static domestic IPs, where we want to achieve Dynamic-DNS to have our home IPs publicly reachable with a DNS name.
+However, the tool supports specifying a value for a domain record, if this is different from the public IP, and can be used to set whetever record type the provider supports.
 
 Note:
-The script uses `http://ifconfig.io` to query the public IP. This means that the folks running that site will be able to see your IP address (as you are making a request to them). If this is not fine for you, consider selfhosting the ifconfig.io (I might do that in the future and parametrize the respective function).
+The script uses `http://ifconfig.io` to query the public IP. This means that the folks running that site will be able to see your IP address (as you are making a request to them). If this is not fine for you, consider selfhosting a similar service.
 
 ## Features
 
-* The record to be set is first queried, if it exists and matches the current public IP, nothing is done.
-* If the record exists but doesn't match the current public IP, that record is updated.
+* The record to be set is first queried, if it exists and matches the specified value (or alternatively the public IP), nothing is done.
+* If the record exists but doesn't match the current public IP/the specified value, that record is updated.
 * If the record does not exist, it is created.
+* Cron mode, Docker friendly way to run the tool periodically without having to install cron inside the image.
 
 ## Development
 
@@ -78,6 +109,11 @@ const (
 	// New provider here
 	myProvider = "MyProvider"
 )
+
+var providersMap = map[string]models.Provider{
+	godaddyProvider: &api.GodaddyHandler{},
+	myProvider: &api.MyProviderHandler{},
+}
 ```
 
 and 

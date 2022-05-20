@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
-	godaddy "github.com/sudneo/home-ddns/api"
+	"github.com/sudneo/home-ddns/api"
 	"github.com/sudneo/home-ddns/config"
 	"github.com/sudneo/home-ddns/models"
 	"github.com/sudneo/home-ddns/utils"
@@ -19,11 +20,11 @@ const (
 // Each name (used in the config) is matched
 // with the corresponding handler type
 var providersMap = map[string]models.Provider{
-	godaddyProvider: &godaddy.GodaddyHandler{},
+	godaddyProvider: &api.GodaddyHandler{},
 }
 
 func init() {
-	log.SetFormatter(&log.TextFormatter{})
+	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
 }
@@ -109,6 +110,8 @@ func main() {
 	var configuration = flag.String("config", "config.yaml", "Configuration file to use")
 	var debug = flag.Bool("v", false, "Enable debug logs")
 	var json = flag.Bool("j", false, "Enable logging in JSON")
+	var cronMode = flag.Bool("cron", false, "Enable cron mode (execute every interval)")
+	var cronInterval = flag.Int("interval", 60, "Interval in minutes between each execution (requires cron mode)")
 	flag.Parse()
 	if *debug {
 		log.SetLevel(log.DebugLevel)
@@ -116,13 +119,31 @@ func main() {
 	if *json {
 		log.SetFormatter(&log.JSONFormatter{})
 	}
-	conf, err := config.ReadConfig(*configuration)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	err = run(conf)
-	if err != nil {
-		log.Error(err)
+	if !*cronMode {
+		conf, err := config.ReadConfig(*configuration)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		err = run(conf)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Processing completed successfully")
+	} else {
+		for {
+			conf, err := config.ReadConfig(*configuration)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			log.Debug("Configuration reloaded")
+			err = run(conf)
+			if err != nil {
+				log.Error(err)
+			}
+			log.Debug("Execution completed successfully")
+			time.Sleep(time.Duration(*cronInterval) * time.Minute)
+		}
 	}
 }
