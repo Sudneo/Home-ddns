@@ -1,0 +1,11 @@
+providers:
+  - name: "Godaddy"
+    client_id: "DUMMY" 
+    client_key: "DUMMY"
+    domains:
+      - domain: "example.com"
+        records:
+          - name: "home"
+            type: "A"
+          - name: "test"
+            type: "CNAME"

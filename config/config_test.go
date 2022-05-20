@@ -101,7 +101,7 @@ func TestParseConfig(t *testing.T) {
 }
 
 func TestReadConfig(t *testing.T) {
-	filename := "../test/config.yaml"
+	filename := "../test/config-test.yaml"
 	_, err := ReadConfig(filename)
 	if err != nil {
 		t.Errorf("Reading the configuration YAML lead to error")
