@@ -114,7 +114,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 	if *json {
-		log.SetFormatter(&log.TextFormatter{})
+		log.SetFormatter(&log.JSONFormatter{})
 	}
 	conf, err := config.ReadConfig(*configuration)
 	if err != nil {
