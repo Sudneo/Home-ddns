@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/sudneo/godaddy-dns/models"
+	"github.com/sudneo/home-ddns/models"
 )
 
 const (
@@ -19,20 +19,6 @@ type GodaddyHandler struct {
 	ClientID  string
 	ClientKey string
 }
-
-// Sometimes Godaddy API returns code as a string, sometimes as an int
-// ¯\_(ツ)_/¯
-
-// type godaddyErrorResponseInt struct {
-// Code   int `json:"code"`
-// Fields []struct {
-// Code        int    `json:"code"`
-// Message     string `json:"message"`
-// Path        string `json:"path"`
-// Pathrelated string `json:"pathRelated"`
-// } `json:"fields"`
-// Message string `json:"message"`
-// }
 
 type godaddyErrorResponse struct {
 	Code   string `json:"code"`
@@ -176,7 +162,6 @@ func (h *GodaddyHandler) SetRecord(domain string, record models.DNSRecord) (err 
 		log.Fatal(err)
 	}
 
-	// response := godaddyErrorResponseInt{}
 	response := godaddyErrorResponse{}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
@@ -245,7 +230,6 @@ func (h *GodaddyHandler) UpdateRecord(domain string, record models.DNSRecord) (e
 		log.Fatal(err)
 	}
 
-	// response := godaddyErrorResponseInt{}
 	response := godaddyErrorResponse{}
 	err = json.Unmarshal(body, &response)
 	if err != nil {

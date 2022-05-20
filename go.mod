@@ -1,4 +1,4 @@
-module github.com/sudneo/godaddy-dns
+module github.com/sudneo/home-ddns
 
 go 1.16
 

@@ -8,9 +8,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	ifconfigURL = "http://ifconfig.io/ip"
+)
+
 func GetPublicIP() (ip string, err error) {
-	var url = "http://ifconfig.io/ip"
-	response, err := http.Get(url)
+	response, err := http.Get(ifconfigURL)
 	if err != nil {
 		log.Error(err)
 		return "", err

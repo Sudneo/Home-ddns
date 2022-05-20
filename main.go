@@ -5,16 +5,19 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	godaddy "github.com/sudneo/godaddy-dns/api"
-	"github.com/sudneo/godaddy-dns/config"
-	"github.com/sudneo/godaddy-dns/models"
-	"github.com/sudneo/godaddy-dns/utils"
+	godaddy "github.com/sudneo/home-ddns/api"
+	"github.com/sudneo/home-ddns/config"
+	"github.com/sudneo/home-ddns/models"
+	"github.com/sudneo/home-ddns/utils"
 )
 
 const (
 	godaddyProvider = "Godaddy"
 )
 
+// Map to register providers
+// Each name (used in the config) is matched
+// with the corresponding handler type
 var providersMap = map[string]models.Provider{
 	godaddyProvider: &godaddy.GodaddyHandler{},
 }
@@ -29,9 +32,13 @@ func processDomain(d config.DomainConfiguration, handler models.Provider, extern
 	for _, record := range d.Records {
 		dnsRecord, err := handler.GetRecord(d.Domain, record)
 		if err != nil {
-			log.Error(err)
+			log.WithFields(log.Fields{
+				"Error":  err,
+				"Record": record.Name,
+			}).Error("Failed to process DNS record")
 			continue
 		}
+		// If the DNS record does not have a value specified, set sane defaults
 		if record.Value == "" {
 			if record.Type == "CNAME" {
 				record.Value = "@"
@@ -39,12 +46,14 @@ func processDomain(d config.DomainConfiguration, handler models.Provider, extern
 				record.Value = externalIP
 			}
 		}
+		// If the current record does not exist, the DNS record must be created
 		if dnsRecord.Value == "" {
 			log.WithFields(log.Fields{
 				"Name": record.Name,
 			}).Debug("Not found existing record for domain, creating a new one")
 			err = handler.SetRecord(d.Domain, record)
 		} else {
+			// If the record does exist, but it's not up-to-date, update it
 			if dnsRecord.Value != record.Value {
 				log.WithFields(log.Fields{
 					"Name": record.Name,
@@ -63,6 +72,7 @@ func processDomain(d config.DomainConfiguration, handler models.Provider, extern
 }
 
 func run(c config.Config) error {
+	// This call is done here to minimize requests to third parties
 	externalIP, err := utils.GetPublicIP()
 	if err != nil {
 		return err
@@ -77,7 +87,7 @@ func run(c config.Config) error {
 			log.WithFields(log.Fields{
 				"Domains":  len(provider.Domains),
 				"Provider": provider.Name,
-			}).Debug("Processing domains")
+			}).Debug("Processing domains for provider")
 			for _, domain := range provider.Domains {
 				err := processDomain(domain, handler, externalIP)
 				if err != nil {
@@ -89,18 +99,22 @@ func run(c config.Config) error {
 			log.WithFields(log.Fields{
 				"Provider": provider.Name,
 			}).Error("Provider not recognized")
+			continue
 		}
 	}
-
 	return nil
 }
 
 func main() {
 	var configuration = flag.String("config", "config.yaml", "Configuration file to use")
 	var debug = flag.Bool("v", false, "Enable debug logs")
+	var json = flag.Bool("j", false, "Enable logging in JSON")
 	flag.Parse()
 	if *debug {
 		log.SetLevel(log.DebugLevel)
+	}
+	if *json {
+		log.SetFormatter(&log.TextFormatter{})
 	}
 	conf, err := config.ReadConfig(*configuration)
 	if err != nil {

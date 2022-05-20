@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/sudneo/godaddy-dns/models"
+	"github.com/sudneo/home-ddns/models"
 	yaml "gopkg.in/yaml.v3"
 )
 
