@@ -2,6 +2,18 @@
 
 Simple Golang tool to update DNS records (extensible to multiple providers) for home public IP 
 
+## Installation
+
+The tool can be easily compiled locally:
+
+```bash
+git clone https://github.com/Sudneo/Home-ddns.git
+cd home-ddns
+make build
+```
+
+Alternatively, a prebuild release can be downloaded from [Github](https://github.com/Sudneo/Home-ddns/releases).
+
 ## Usage 
 
 All the configuration is in a YAML file, this allows to manage multiple domains at once, with more flexibility in record types, TTLs, etc.
