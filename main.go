@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"time"
@@ -77,6 +78,10 @@ func run(c config.Config) error {
 	externalIP, err := utils.GetPublicIP()
 	if err != nil {
 		return err
+	}
+	if len(externalIP) == 0 {
+		log.Error("No external IP obtained, likely failed to call ifconfig.io")
+		return errors.New("Failed to query external IP")
 	}
 	// Process providers one by one
 	for _, provider := range c.Providers {
