@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -18,7 +18,7 @@ func GetPublicIP() (ip string, err error) {
 		log.Error(err)
 		return "", err
 	}
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Error(err)
 		return "", err

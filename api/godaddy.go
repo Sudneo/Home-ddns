@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -69,7 +69,7 @@ func (h *GodaddyHandler) GetRecord(domain string, record models.DNSRecord) (dnsR
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		response := godaddyErrorResponse{}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return d, err
 		}
@@ -80,7 +80,7 @@ func (h *GodaddyHandler) GetRecord(domain string, record models.DNSRecord) (dnsR
 		return d, &ErrAPIFailed{Code: response.Code, Message: response.Message}
 	}
 	response := godaddyRecordData{}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return d, err
 	}
@@ -156,7 +156,7 @@ func (h *GodaddyHandler) SetRecord(domain string, record models.DNSRecord) (err 
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	fmt.Print(string(body))
 	if err != nil {
 		log.Fatal(err)
@@ -224,7 +224,7 @@ func (h *GodaddyHandler) UpdateRecord(domain string, record models.DNSRecord) (e
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	fmt.Print(string(body))
 	if err != nil {
 		log.Fatal(err)

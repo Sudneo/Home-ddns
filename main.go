@@ -15,6 +15,7 @@ import (
 
 const (
 	godaddyProvider = "Godaddy"
+	porkbunProvider = "Porkbun"
 )
 
 // Map to register providers
@@ -22,6 +23,7 @@ const (
 // with the corresponding handler type
 var providersMap = map[string]models.Provider{
 	godaddyProvider: &api.GodaddyHandler{},
+	porkbunProvider: &api.PorkbunHandler{},
 }
 
 func init() {
